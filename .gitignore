@@ -1,0 +1,5 @@
+.mamba
+__pycache__
+.tox
+.pytest_cache
+sim_build

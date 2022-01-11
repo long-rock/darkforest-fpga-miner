@@ -1,0 +1,8 @@
+name: df-fpga-miner
+channels:
+- conda-forge
+dependencies:
+- iverilog
+- pip
+- pip:
+  - tox
