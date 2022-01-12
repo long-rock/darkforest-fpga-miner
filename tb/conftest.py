@@ -5,6 +5,7 @@ import pytest
 
 class RtlData:
     """Gives access to files in the `rtl/` folder."""
+
     def __init__(self, rtl_dir: Path):
         self._rtl_dir = rtl_dir
 
@@ -14,5 +15,5 @@ class RtlData:
 
 @pytest.fixture
 def rtl_dir():
-    basedir = Path(__file__).parent.parent / 'rtl'
+    basedir = Path(__file__).parent.parent / "rtl"
     return RtlData(basedir)

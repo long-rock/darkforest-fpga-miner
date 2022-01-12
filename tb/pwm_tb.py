@@ -5,7 +5,7 @@ from cocotb.triggers import FallingEdge
 
 @cocotb.test()
 async def test_field_adder_no_overflow(dut):
-    clock = Clock(dut.clk, 10, units='us')
+    clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
     dut.width.value = 100
