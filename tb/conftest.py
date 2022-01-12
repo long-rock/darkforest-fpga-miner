@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 
+PRIME = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+
 
 class RtlData:
     """Gives access to files in the `rtl/` folder."""
