@@ -9,7 +9,11 @@ The mining algorithm is described in more details in `docs/mining.md`.
 
 import argparse
 import json
+import math
 import sys
+
+BIT_SIZE = 256
+WIDE_BIT_SIZE = 512
 
 PRIME = 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
@@ -236,27 +240,74 @@ ROUND_CONSTANTS = [
 ]
 
 
+def _field_add(a: int, b: int) -> int:
+    """
+    Sum a + b in the MiMC field.
+
+    Check temporary value does not overflow a standard width number.
+    """
+    t = a + b
+
+    # check overflow
+    assert t == 0 or math.ceil(math.log2(t)) <= BIT_SIZE
+
+    if t >= PRIME:
+        r = t - PRIME
+    else:
+        r = t
+
+    # check correctness
+    assert r == (a + b) % PRIME
+
+    return r
+
+
+def _field_mul(a: int, b: int) -> int:
+    """
+    Multiply a * b in the MiMC field.
+
+    Check temporary value does not overflow a wide width number.
+    """
+    t = a * b
+
+    # check overflow
+    assert t == 0 or math.ceil(math.log2(t)) <= WIDE_BIT_SIZE
+
+    # TODO: does Verilog have modulo?
+    return t % PRIME
+
+
+def _field_fifth_pow(n: int) -> int:
+    """Returns the fifth power of n."""
+    # t = n^2
+    t = _field_mul(n, n)
+    # w = t^2 = n^4
+    w = _field_mul(t, t)
+    # w * n = n^4 * n = n^5
+    return _field_mul(w, n)
+
+
 class MiMCSponge:
     def __init__(self):
         self.l = 0
         self.r = 0
 
     def inject(self, x):
-        self.l = (self.l + x) % PRIME
+        self.l = _field_add(self.l, x)
 
     def mix(self, key):
         for c in ROUND_CONSTANTS:
-            t0 = (key + self.l) % PRIME
-            t1 = (t0 + c) % PRIME
-            t2 = (t1 ** 5) % PRIME
-            t3 = (t2 + self.r) % PRIME
+            t0 = _field_add(key, self.l)
+            t1 = _field_add(t0, c)
+            t2 = _field_fifth_pow(t1)
+            t3 = _field_add(t2, self.r)
             # update state
             self.r = self.l
             self.l = t3
 
-        t4 = (key + self.l) % PRIME
-        t5 = (t4 ** 5) % PRIME
-        t6 = (t5 + self.r) % PRIME
+        t4 = _field_add(key, self.l)
+        t5 = _field_fifth_pow(t4)
+        t6 = _field_add(t5, self.r)
         # update state
         self.r = t6
 
